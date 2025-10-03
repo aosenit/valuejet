@@ -4,6 +4,23 @@ export const baseUrl =
   import.meta.env.VITE_API_URL ||
   "https://api.valuejet.sbscuk.co.uk/public/api/v1/";
 
+// Auth routes that should not trigger session timeout dialog
+const authRoutes = [
+  "/signin",
+  "/verify-signin-otp",
+  "/forgot-password",
+  "/reset-otp",
+  "/check-email",
+  "/set-new-password",
+  "/password-reset-successful",
+];
+
+// Check if current route is an auth page
+const isAuthPage = () => {
+  const currentPath = window.location.pathname;
+  return authRoutes.includes(currentPath);
+};
+
 const axiosInstance = axios.create({
   baseURL: baseUrl,
   headers: {
@@ -71,7 +88,6 @@ const handleError = async (error: any) => {
   }
 
   const { status, data } = error.response;
-  // const originalRequest = error.config;
 
   // Handle 401 errors with session expired dialog
   if (status === 401) {
@@ -80,8 +96,8 @@ const handleError = async (error: any) => {
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
 
-    // Show session expired dialog
-    if (window.showSessionExpiredDialog) {
+    // Only show session expired dialog if not on an auth page
+    if (!isAuthPage() && window.showSessionExpiredDialog) {
       window.showSessionExpiredDialog();
     }
 
