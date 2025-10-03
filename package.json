@@ -1,5 +1,5 @@
 {
-  "name": "valuejet",
+  "name": "valuejet-FE",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -28,6 +28,7 @@
     "formik": "^2.4.6",
     "react-otp-input": "^3.1.1",
     "sonner": "^2.0.7",
+    "yaml": "^2.4.2",
     "zod": "^4.1.11",
     "zod-formik-adapter": "^2.0.0"
   }

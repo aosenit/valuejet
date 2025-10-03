@@ -13,14 +13,36 @@ import SetNewPassword from "./components/SetNewPassword";
 import { AppWithErrorHandling } from "./components/expired/AppWithErrorHandling";
 import Protected from "./components/Protected";
 import LoginOtp from "./pages/LoginOtp";
+
 import Forgot from "./pages/forgot";
 import ResetOtp from "./pages/ResetOtp";
+
+import MainLayout from "./components/layouts/MainLayout";
+import ManageUsersSection from "./pages/UserManagement/ManageUsersModule/ManageUsersSection";
+import UserProfile from "./pages/UserManagement/UserProfile";
 
 function App() {
   return (
     <Router>
       <AppWithErrorHandling>
         <Routes>
+          <Route
+            path="/manage-users"
+            element={
+              <MainLayout>
+                <ManageUsersSection />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/manage-users/user-profile"
+            element={
+              <MainLayout>
+                <UserProfile />
+              </MainLayout>
+            }
+          />
+
           {/* Auth Routes */}
           <Route path="/" element={<AuthLayout />}>
             <Route index element={<Navigate to="/signin" replace />} />
