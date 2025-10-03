@@ -5,9 +5,12 @@ import {
   Link,
   FormControl,
   OutlinedInput,
+  Alert,
 } from "@mui/material";
 import { EmailOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { usePostData } from "../hooks/useApis";
+import { toast } from "sonner";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -15,13 +18,30 @@ export default function ForgotPassword() {
   const [isValid, setIsValid] = useState(false);
 
   const navigate = useNavigate();
+  const forgotPasswordMutation = usePostData("auth/forgot-password");
 
   const handleBackToSignIn = () => {
     navigate("/signin");
   };
 
-  const handleSendResetLink = (email: string) => {
-    navigate("/check-email", { state: { email } });
+  const handleSendResetLink = async (email: string) => {
+    try {
+      const callbackUrl = `${window.location.origin}/reset-otp`;
+      const payload = {
+        email,
+        callback_url: callbackUrl,
+      };
+
+      const response = await forgotPasswordMutation.mutateAsync(payload);
+
+      if (response) {
+        toast.success("Password reset link sent to your email");
+        navigate("/check-email", { state: { email } });
+      }
+    } catch (error) {
+      console.error("Error sending reset link:", error);
+      toast.error("Failed to send reset link. Please try again.");
+    }
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,6 +78,13 @@ export default function ForgotPassword() {
         </p>
       </div>
 
+      {forgotPasswordMutation.isError && (
+        <Alert severity="error" className="mb-4">
+          {forgotPasswordMutation.error?.message ||
+            "Failed to send reset link. Please try again."}
+        </Alert>
+      )}
+
       <div className="grid gap-4">
         <FormControl variant="outlined" className="w-full space-y-1">
           <label htmlFor="email">Email</label>
@@ -91,12 +118,14 @@ export default function ForgotPassword() {
         <FormControl className="w-full">
           <Button
             onClick={handleSubmit}
-            disabled={!isValid}
+            disabled={!isValid || forgotPasswordMutation.isPending}
             fullWidth
             variant="contained"
             size="large"
           >
-            Send password reset link
+            {forgotPasswordMutation.isPending
+              ? "Sending..."
+              : "Send password reset link"}
           </Button>
         </FormControl>
 

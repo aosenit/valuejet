@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Button,
   InputAdornment,
   IconButton,
   FormControl,
   OutlinedInput,
+  Alert,
 } from "@mui/material";
 import {
   Visibility,
@@ -12,7 +13,9 @@ import {
   LockOutline,
   Check,
 } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { usePostData } from "../hooks/useApis";
+import { toast } from "sonner";
 
 export default function SetNewPassword() {
   const [password, setPassword] = useState("");
@@ -20,11 +23,55 @@ export default function SetNewPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordMismatch, setPasswordMismatch] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [token, setToken] = useState<string>("");
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const resetPasswordMutation = usePostData("auth/reset-password");
 
-  const handlePasswordReset = () => {
-    navigate("/password-reset-successful");
+  // Get email and token from location state
+  useEffect(() => {
+    if (location.state?.email && location.state?.token) {
+      setEmail(location.state.email);
+      setToken(location.state.token);
+    } else {
+      // If no state, redirect to forgot password
+      toast.error("Invalid session. Please request a new reset link.");
+      navigate("/forgot-password");
+    }
+  }, [location.state, navigate]);
+
+  const handlePasswordReset = async () => {
+    if (!email || !token) {
+      toast.error("Invalid session. Please request a new reset link.");
+      navigate("/forgot-password");
+      return;
+    }
+
+    if (!allValidationsPassed || passwordMismatch || !confirmPassword) {
+      toast.error("Please fix all validation errors before proceeding.");
+      return;
+    }
+
+    try {
+      const payload = {
+        email,
+        token,
+        password,
+        password_confirmation: confirmPassword,
+      };
+
+      const response = await resetPasswordMutation.mutateAsync(payload);
+
+      if (response) {
+        toast.success("Password reset successfully");
+        navigate("/password-reset-successful");
+      }
+    } catch (error) {
+      console.error("Password reset failed:", error);
+      toast.error("Failed to reset password. Please try again.");
+    }
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,6 +118,13 @@ export default function SetNewPassword() {
           Your password must be different from previously used password.
         </p>
       </div>
+
+      {resetPasswordMutation.isError && (
+        <Alert severity="error" className="mb-4">
+          {resetPasswordMutation.error?.message ||
+            "Failed to reset password. Please try again."}
+        </Alert>
+      )}
 
       <div className="grid gap-4">
         <FormControl variant="outlined" className="w-full space-y-1">
@@ -251,13 +305,18 @@ export default function SetNewPassword() {
           <Button
             onClick={handlePasswordReset}
             disabled={
-              !allValidationsPassed || passwordMismatch || !confirmPassword
+              !allValidationsPassed ||
+              passwordMismatch ||
+              !confirmPassword ||
+              resetPasswordMutation.isPending
             }
             fullWidth
             variant="contained"
             size="large"
           >
-            Reset Password
+            {resetPasswordMutation.isPending
+              ? "Resetting Password..."
+              : "Reset Password"}
           </Button>
         </FormControl>
       </div>

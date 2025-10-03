@@ -3,7 +3,6 @@ import {
   Button,
   InputAdornment,
   IconButton,
-  Link,
   FormControl,
   OutlinedInput,
   Alert,
@@ -23,6 +22,7 @@ import { arrowRight } from "../utils/icons";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 import { usePostData } from "../hooks/useApis";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 const AuthPages = [
   "/signin",
@@ -71,11 +71,6 @@ const SignIn = () => {
     validateOnChange: true,
     validateOnBlur: true,
   });
-
-  // Replace onForgotPassword prop with:
-  const handleForgotPassword = () => {
-    navigate("/forgot-password");
-  };
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -175,11 +170,9 @@ const SignIn = () => {
 
           <div className="text-right">
             <Link
-              component="button"
-              variant="body2"
-              onClick={handleForgotPassword}
+              to={"/forgot-password"}
               className="underline"
-              sx={{ color: "var(--brand-color)" }}
+              style={{ color: "var(--brand-color)" }}
             >
               Forgot password?
             </Link>
