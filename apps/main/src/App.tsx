@@ -11,7 +11,6 @@ import { AuthLayout } from "./components/AuthLayout";
 import { CheckEmailForm } from "./components/CheckEmail";
 import SetNewPassword from "./components/SetNewPassword";
 import { AppWithErrorHandling } from "./components/expired/AppWithErrorHandling";
-import Protected from "./components/Protected";
 import LoginOtp from "./pages/LoginOtp";
 
 import Forgot from "./pages/forgot";
@@ -62,9 +61,97 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <Protected>
+              <MainLayout>
                 <div>Dashboard</div>
-              </Protected>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/incidence-management"
+            element={
+              <MainLayout>
+                <div>Incidence Management</div>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/customer-management"
+            element={
+              <MainLayout>
+                <div>Customer Management</div>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/escalation-management"
+            element={
+              <MainLayout>
+                <div>Escalation Management</div>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/department"
+            element={
+              <MainLayout>
+                <div>Department</div>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/knowledge-base"
+            element={
+              <MainLayout>
+                <div>Knowledge Base</div>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/approval-workflow"
+            element={
+              <MainLayout>
+                <div>Approval Workflow</div>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/audit-trail"
+            element={
+              <MainLayout>
+                <div>Audit Trail</div>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/user-management"
+            element={
+              <MainLayout>
+                <div>User Management</div>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/manage-roles"
+            element={
+              <MainLayout>
+                <div>Manage Roles</div>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/general-settings"
+            element={
+              <MainLayout>
+                <div>General Settings</div>
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <MainLayout>
+                <div>Notifications</div>
+              </MainLayout>
             }
           />
 

@@ -12,19 +12,30 @@ import {
   Collapse,
 } from "@mui/material";
 
-import { ChevronUp, ChevronDown, Users } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  Users,
+  Settings,
+  Bell,
+  FileText,
+  AlertTriangle,
+  UserCheck,
+  Workflow,
+  History,
+} from "lucide-react";
 import { NavLink } from "react-router-dom";
 
-import logo from "../../assets/logo.svg";
-
 import Header from "./components/Header";
+import Protected from "../Protected";
+import logo from "../../assets/logo.svg";
 
 // Nav interfaces
 interface NavItem {
   id: string;
   title: string;
   path: string;
-  icon: string | React.ElementType;
+  icon: React.ElementType;
 
   hasDropdown?: boolean;
   subItems?: SubNavItem[];
@@ -42,8 +53,54 @@ const navigationItems: NavItem[] = [
   {
     id: "Incidence Management",
     title: "Incidence Management",
-    path: "/home",
-    icon: logo,
+    path: "/incidence-management",
+    icon: Settings,
+    hasDropdown: true,
+    // dashboard and Incidence list
+    subItems: [
+      { id: "dashboard", title: "Dashboard", path: "/dashboard" },
+      {
+        id: "incidence-list",
+        title: "Incidence List",
+        path: "/incidence-list",
+      },
+    ],
+  },
+  {
+    id: "Customer Management",
+    title: "Customer Management",
+    path: "/customer-management",
+    icon: UserCheck,
+  },
+  {
+    id: "Escalation Management",
+    title: "Escalation Management",
+    path: "/escalation-management",
+    icon: AlertTriangle,
+  },
+  {
+    id: "Department",
+    title: "Department",
+    path: "/department",
+    icon: Users,
+  },
+  {
+    id: "Knowledge Base",
+    title: "Knowledge Base",
+    path: "/knowledge-base",
+    icon: FileText,
+  },
+  {
+    id: "Approval Workflow",
+    title: "Approval Workflow",
+    path: "/approval-workflow",
+    icon: Workflow,
+  },
+  {
+    id: "Audit Trail",
+    title: "Audit Trail",
+    path: "/audit-trail",
+    icon: History,
   },
   {
     id: "User Management",
@@ -56,12 +113,24 @@ const navigationItems: NavItem[] = [
       { id: "man-roles", title: "Manage Roles", path: "/manage-roles" },
     ],
   },
+  {
+    id: "General Settings",
+    title: "General Settings",
+    path: "/general-settings",
+    icon: Settings,
+  },
+  {
+    id: "Notifications",
+    title: "Notifications",
+    path: "/notifications",
+    icon: Bell,
+  },
 ];
 
 const DashBoard = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownStates, setDropdownStates] = useState({
-    userManagement: false,
+    "User Management": false,
   });
 
   const handleDrawerToggle = () => {
@@ -80,27 +149,24 @@ const DashBoard = ({ children }: { children: React.ReactNode }) => {
   const renderNavItem = (item: NavItem) => {
     if (item.hasDropdown && item.subItems) {
       return (
-        <Box key={item.id}>
+        <Box key={item.id} className="mb-2">
           <ListItemButton
             onClick={() => toggleDropdown(item.id as DropdownKey)}
             sx={{
               color: "white",
               "&:hover": { backgroundColor: "#AD3291" },
               borderRadius: "8px",
+              mb: 1,
             }}
           >
             <ListItemIcon>
-              {typeof item.icon === "string" ? (
-                <img src={item.icon} alt="logo" width={20} />
-              ) : (
-                React.createElement(item.icon, { size: 20, color: "#D699C8" })
-              )}
+              {React.createElement(item.icon, { size: 20, color: "white" })}
             </ListItemIcon>
             <ListItemText primary={item.title} />
             {dropdownStates[item.id as DropdownKey] ? (
-              <ChevronUp size={20} color="#D699C8" />
+              <ChevronUp size={20} color="white" />
             ) : (
-              <ChevronDown size={20} color="#D699C8" />
+              <ChevronDown size={20} color="white" />
             )}
           </ListItemButton>
 
@@ -115,12 +181,14 @@ const DashBoard = ({ children }: { children: React.ReactNode }) => {
                   key={subItem.id}
                   to={subItem.path}
                   className={({ isActive }) =>
-                    `block px-8 py-2 rounded-md ${
-                      isActive ? " font-bold" : "hover:bg-[#AD3291]"
+                    `block px-8 py-2 rounded-md text-white transition-colors ${
+                      isActive
+                        ? "bg-[#AD3291] "
+                        : "hover:bg-[#AD3291] hover:bg-opacity-50"
                     }`
                   }
                 >
-                  {subItem.title}
+                  <span className="text-[14px]">{subItem.title}</span>
                 </NavLink>
               ))}
             </List>
@@ -133,20 +201,16 @@ const DashBoard = ({ children }: { children: React.ReactNode }) => {
         key={item.id}
         to={item.path}
         className={({ isActive }) =>
-          `flex items-center gap-4 px-4 py-2 rounded-md ${
+          `flex items-center gap-4 px-4 py-2 rounded-md text-white transition-colors mb-1 ${
             isActive
-              ? "bg-[#AD3291] text-white font-bold"
-              : "hover:bg-[#AD3291] hover:text-white"
+              ? "bg-[#AD3291] "
+              : "hover:bg-[#AD3291] hover:bg-opacity-50"
           }`
         }
       >
-        {typeof item.icon === "string" ? (
-          <img src={item.icon} alt="logo" width={20} />
-        ) : (
-          React.createElement(item.icon, { size: 20, color: "#AD3291" })
-        )}
+        {React.createElement(item.icon, { size: 16, color: "white" })}
 
-        <span>{item.title}</span>
+        <span className="text-[14px]">{item.title}</span>
       </NavLink>
     );
   };
@@ -163,79 +227,92 @@ const DashBoard = ({ children }: { children: React.ReactNode }) => {
         p: 2,
       }}
     >
-      <Box className="flex items-center justify-between my-2 pb-14">
-        <img src={logo} alt="logo" className="" />
+      <Box className="flex items-center justify-center my-4 pb-6">
+        <span
+          className="text-2xl font-bold text-white"
+          style={{ fontFamily: "cursive" }}
+        >
+          <img
+            src={logo}
+            alt="logo"
+            className="h-[40px] w-[100px] object-contain"
+          />
+        </span>
       </Box>
 
-      <List sx={{ flex: 1 }}>{navigationItems.map(renderNavItem)}</List>
+      <Box className="flex flex-col gap-1">
+        {navigationItems.map(renderNavItem)}
+      </Box>
     </Box>
   );
 
   return (
-    <Box sx={{ display: "flex" }}>
-      <CssBaseline />
-      {/* Header / AppBar */}
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          ml: { md: `${drawerWidth}px` },
-          backgroundColor: "#FFFFFF",
-          color: "black",
-          boxShadow: "none",
-        }}
-      >
-        <Toolbar>
-          <Header toggle={handleDrawerToggle} />
-        </Toolbar>
-      </AppBar>
-
-      {/* Sidebar / Drawer */}
-      <Box
-        component="nav"
-        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
-      >
-        {/* Mobile drawer */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
+    <Protected>
+      <Box sx={{ display: "flex" }}>
+        <CssBaseline />
+        {/* Header / AppBar */}
+        <AppBar
+          position="fixed"
           sx={{
-            display: { xs: "block", md: "none" },
-            "& .MuiDrawer-paper": { width: drawerWidth },
+            width: { md: `calc(100% - ${drawerWidth}px)` },
+            ml: { md: `${drawerWidth}px` },
+            backgroundColor: "#FFFFFF",
+            color: "black",
+            boxShadow: "none",
           }}
         >
-          {drawer}
-        </Drawer>
+          <Toolbar>
+            <Header toggle={handleDrawerToggle} />
+          </Toolbar>
+        </AppBar>
 
-        {/* Desktop drawer */}
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: "none", md: "block" },
-            "& .MuiDrawer-paper": { width: drawerWidth },
-          }}
-          open
+        {/* Sidebar / Drawer */}
+        <Box
+          component="nav"
+          sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
         >
-          {drawer}
-        </Drawer>
-      </Box>
+          {/* Mobile drawer */}
+          <Drawer
+            variant="temporary"
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            ModalProps={{ keepMounted: true }}
+            sx={{
+              display: { xs: "block", md: "none" },
+              "& .MuiDrawer-paper": { width: drawerWidth },
+            }}
+          >
+            {drawer}
+          </Drawer>
 
-      {/* Main Content */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
+          {/* Desktop drawer */}
+          <Drawer
+            variant="permanent"
+            sx={{
+              display: { xs: "none", md: "block" },
+              "& .MuiDrawer-paper": { width: drawerWidth },
+            }}
+            open
+          >
+            {drawer}
+          </Drawer>
+        </Box>
 
-          mt: 8,
-          backgroundColor: "#FFFFFF",
-          minHeight: "100vh",
-        }}
-      >
-        {children}
+        {/* Main Content */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+
+            mt: 8,
+            backgroundColor: "#FFFFFF",
+            minHeight: "calc(100vh - 80px)",
+          }}
+        >
+          {children}
+        </Box>
       </Box>
-    </Box>
+    </Protected>
   );
 };
 
