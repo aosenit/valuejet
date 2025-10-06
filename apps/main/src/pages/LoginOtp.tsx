@@ -23,6 +23,7 @@ const schema = z.object({
 
 const LoginOtp = () => {
   const loginMutation = usePostData("auth/verify-otp");
+  const resendOtpMutation = usePostData("auth/resend-otp");
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email");
   const location = searchParams.get("location");
@@ -64,7 +65,25 @@ const LoginOtp = () => {
   });
 
   // Resend OTP handler
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
+    if (!email) {
+      toast.error("Email is required");
+      return;
+    }
+    const payload = {
+      user_id: userId,
+      context: "login",
+    };
+
+    try {
+      const response = await resendOtpMutation.mutateAsync(payload);
+      if (response) {
+        toast.success(response?.message || "OTP resent successfully");
+        formik.setFieldValue("otp", "");
+      }
+    } catch (error) {
+      console.log(error);
+    }
     // Implement resend OTP logic here
     console.log("Resend OTP");
   };
@@ -153,18 +172,16 @@ const LoginOtp = () => {
             <Typography variant="body2" className="text-gray-600 mb-2">
               Didn't receive the code?
             </Typography>
-            <Link
-              component="button"
-              variant="body2"
+            <button
               onClick={handleResendOtp}
-              className="underline"
-              sx={{
+              className="hover:underline text-sm cursor-pointer"
+              style={{
                 color: "var(--brand-color)",
                 fontWeight: "500",
               }}
             >
               Resend Code
-            </Link>
+            </button>
           </div>
 
           {/* Back to Login */}

@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 
-import bgCAM from "../assets/cam.jpg";
+import authImage from "../assets/authImage.jpg";
 import logo from "../assets/valuejet-logo.png";
 // import plane one and two
 import planeOne from "../assets/airplane.png";
@@ -12,7 +12,7 @@ export function AuthLayout() {
       {/* Left side - Background */}
       <div
         className="w-[40%] relative bg-cover bg-center bg-no-repeat md:flex  justify-center items-end pb-16 hidden"
-        style={{ backgroundImage: `url(${bgCAM})` }}
+        style={{ backgroundImage: `url(${authImage})` }}
       >
         <div className="absolute inset-0 bg-black/20"></div>
 
@@ -20,11 +20,14 @@ export function AuthLayout() {
         <div className=" w-[90%] relative ">
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-[4px] border-[#3D12337A]/20">
             <h2 className="text-white text-2xl font-bold mb-2">
-              Corporate Account Module
+              Full CRM Tools, Full Admin Control.
             </h2>
             <p className="text-white/90 text-sm leading-relaxed">
-              Your central hub for managing ValueJet corporate bookings and
-              account balances
+              Easily manage passenger onboarding, assign agents, and keep track
+              of every step all in one place. Stay connected with your
+              customers, track their journey, and manage loyalty upgrades with
+              smart CRM tools. Take full control of your operations with secure
+              access, user role management, and real-time reports.
             </p>
           </div>
         </div>

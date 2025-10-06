@@ -2,9 +2,11 @@ import { Mail, RotateRightOutlined } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { usePostData } from "../hooks/useApis";
 
 export function CheckEmailForm() {
   const [countdown, setCountdown] = useState(54);
+  const resendOtpMutation = usePostData("auth/resend-otp");
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -81,6 +83,10 @@ export function CheckEmailForm() {
     navigate("/signin");
   };
 
+  const handleResendOtp = async () => {
+    console.log("Resend OTP");
+  };
+
   return (
     <div className="space-y-4">
       <div className="text-left">
@@ -100,11 +106,14 @@ export function CheckEmailForm() {
       </div>
 
       <div className="text-center py-4">
-        <div className="flex items-center justify-center gap-2 text-gray-500 text-sm mb-4">
+        <button
+          className="flex items-center justify-center gap-2 text-gray-500 text-sm mb-4"
+          onClick={handleResendOtp}
+        >
           <RotateRightOutlined className="text-[var(--brand-color)]" />
           <span className="text-[var(--brand-color)]">Resend code</span>
           <span>in {formatTime(countdown)}</span>
-        </div>
+        </button>
       </div>
 
       <Button variant="contained" className="w-full" onClick={handleOpenEmail}>
@@ -112,7 +121,7 @@ export function CheckEmailForm() {
         <Mail className="ml-2" fontSize="small" />
       </Button>
 
-      <div className="text-right mt-3 ">
+      <div className="text-center mt-3 ">
         <button
           onClick={handleBackToSignIn}
           className="text-[var(--brand-color)] text-sm font-medium underline"

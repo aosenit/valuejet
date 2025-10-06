@@ -5,9 +5,6 @@ import {
   CssBaseline,
   Drawer,
   List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Toolbar,
   Collapse,
 } from "@mui/material";
@@ -150,25 +147,18 @@ const DashBoard = ({ children }: { children: React.ReactNode }) => {
     if (item.hasDropdown && item.subItems) {
       return (
         <Box key={item.id} className="mb-2">
-          <ListItemButton
+          <button
             onClick={() => toggleDropdown(item.id as DropdownKey)}
-            sx={{
-              color: "white",
-              "&:hover": { backgroundColor: "#AD3291" },
-              borderRadius: "8px",
-              mb: 1,
-            }}
+            className="flex items-center gap-4 px-4 py-2 rounded-md text-white transition-colors mb-1 cursor-pointer hover:bg-[#AD3291] hover:bg-opacity-50 w-full text-left border-none bg-transparent"
           >
-            <ListItemIcon>
-              {React.createElement(item.icon, { size: 20, color: "white" })}
-            </ListItemIcon>
-            <ListItemText primary={item.title} />
+            {React.createElement(item.icon, { size: 16, color: "white" })}
+            <span className="text-[14px] flex-1">{item.title}</span>
             {dropdownStates[item.id as DropdownKey] ? (
               <ChevronUp size={20} color="white" />
             ) : (
               <ChevronDown size={20} color="white" />
             )}
-          </ListItemButton>
+          </button>
 
           <Collapse
             in={dropdownStates[item.id as DropdownKey]}

@@ -15,8 +15,15 @@ export const useAuth = () => {
   };
 
   const logout = () => {
+    // Clear all authentication data
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
-    navigate("/login");
+    localStorage.removeItem("redirectPage");
+    localStorage.removeItem("pageDetails");
+
+    // Navigate to signin page
+    navigate("/signin");
   };
 
   const storeRedirectInfo = () => {
