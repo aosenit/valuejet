@@ -47,17 +47,20 @@ valuejet/
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/aosenit/valuejet.git
 cd valuejet
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Set up environment variables:
+
 ```bash
 # Copy the example environment file
 cp apps/main/.env.example apps/main/.env
@@ -66,6 +69,7 @@ cp apps/main/.env.example apps/main/.env
 ```
 
 4. Start the development server:
+
 ```bash
 pnpm dev
 ```
