@@ -1,7 +1,8 @@
 {
   "buildCommand": "pnpm build",
   "devCommand": "pnpm dev",
-  "installCommand": "pnpm install",
+  "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
-  "outputDirectory": "apps/main/dist"
+  "outputDirectory": "apps/main/dist",
+  "nodeVersion": "18.x"
 }

@@ -33,9 +33,9 @@
   },
   "engines": {
     "node": ">=18",
-    "pnpm": ">=6"
+    "pnpm": ">=7"
   },
-  "packageManager": "pnpm@6.35.1",
+  "packageManager": "pnpm@8.9.0",
   "workspaces": [
     "apps/*",
     "packages/*"
