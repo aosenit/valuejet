@@ -1,7 +1,5 @@
 import React from "react";
-import { Card, CardContent } from "@mui/material";
 import { UserRoundCheck, UserRoundMinus, Users } from "lucide-react";
-import clsx from "clsx";
 
 type UserStatCardProps = {
   title: string;
@@ -19,23 +17,16 @@ const UserStatCard: React.FC<UserStatCardProps> = ({
   icon,
 }) => {
   return (
-    <Card className="w-full rounded-lg border border-gray-200">
-      <CardContent className="flex items-center justify-between p-4">
-        <div>
-          <p className="text-sm text-gray-500">{title}</p>
-          <h3 className="text-2xl font-semibold text-gray-800">{value}</h3>
-          <span className="text-xs text-gray-400">{description}</span>
-        </div>
-        <div
-          className={clsx(
-            "w-10 h-10 flex items-center justify-center rounded-full",
-            color
-          )}
-        >
-          {icon}
-        </div>
-      </CardContent>
-    </Card>
+    <div className={`rounded-lg p-4 flex items-center justify-center ${color}`}>
+      <div className="rounded-lg flex flex-col w-full">
+        <span className="text-sm text-gray-500">{title}</span>
+        <span className="text-2xl font-semibold">{value}</span>
+        <span className="mt-2 text-xs text-gray-400 italic">{description}</span>
+      </div>
+      <span className="p-2 rounded-md bg-gray-100 flex items-center justify-center">
+        {icon}
+      </span>
+    </div>
   );
 };
 
@@ -63,22 +54,22 @@ const UserOverviewEmptyState: React.FC<UserOverviewProps> = ({
           title="All Users"
           value={stats.allUsers}
           description="No data available"
-          color="bg-gray-100 text-gray-700"
-          icon={<Users className="w-5 h-5" />}
+          color="border border-gray-300 bg-gray-50"
+          icon={<Users className="w-5 h-5 text-gray-600" />}
         />
         <UserStatCard
           title="Active Users"
           value={stats.activeUsers}
           description="No data available"
-          color="bg-green-100 text-green-600"
-          icon={<UserRoundCheck className="w-5 h-5" />}
+          color="border border-green-300 bg-green-50"
+          icon={<UserRoundCheck className="w-5 h-5 text-green-600" />}
         />
         <UserStatCard
           title="Inactive Users"
           value={stats.inactiveUsers}
           description="No data available"
-          color="bg-yellow-100 text-yellow-600"
-          icon={<UserRoundMinus className="w-5 h-5" />}
+          color="border border-orange-300 bg-orange-50"
+          icon={<UserRoundMinus className="w-5 h-5 text-orange-600" />}
         />
       </div>
     </div>

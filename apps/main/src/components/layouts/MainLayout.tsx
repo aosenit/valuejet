@@ -68,6 +68,14 @@ const navigationItems: NavItem[] = [
     title: "Customer Management",
     path: "/customer-management",
     icon: UserCheck,
+    hasDropdown: true,
+    subItems: [
+      {
+        id: "customer-dashboard",
+        title: "Dashboard",
+        path: "/customer-management",
+      },
+    ],
   },
   {
     id: "Escalation Management",
@@ -127,6 +135,8 @@ const navigationItems: NavItem[] = [
 const DashBoard = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownStates, setDropdownStates] = useState({
+    "Incidence Management": false,
+    "Customer Management": false,
     "User Management": false,
   });
 
@@ -174,7 +184,7 @@ const DashBoard = ({ children }: { children: React.ReactNode }) => {
                     `block px-8 py-2 rounded-md text-white transition-colors ${
                       isActive
                         ? "bg-[#AD3291] "
-                        : "hover:bg-[#AD3291] hover:bg-opacity-50"
+                        : "hover:text-[#AD3291] hover:bg-opacity-50"
                     }`
                   }
                 >
@@ -219,7 +229,7 @@ const DashBoard = ({ children }: { children: React.ReactNode }) => {
     >
       <Box className="flex items-center justify-center my-4 pb-6">
         <span
-          className="text-2xl font-bold text-white"
+          className="text-2xl font-bold text-white  w-full"
           style={{ fontFamily: "cursive" }}
         >
           <img

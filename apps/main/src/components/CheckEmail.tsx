@@ -2,11 +2,9 @@ import { Mail, RotateRightOutlined } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { usePostData } from "../hooks/useApis";
 
 export function CheckEmailForm() {
   const [countdown, setCountdown] = useState(54);
-  const resendOtpMutation = usePostData("auth/resend-otp");
 
   useEffect(() => {
     const timer = setInterval(() => {

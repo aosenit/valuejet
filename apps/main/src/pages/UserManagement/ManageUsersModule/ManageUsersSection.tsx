@@ -1,16 +1,17 @@
-import { Box, Button, InputAdornment, TextField } from "@mui/material";
+import { Box, InputAdornment, TextField } from "@mui/material";
 import {
   ChevronRight,
-  DownloadCloud,
   UserRoundCheck,
   UserRoundMinus,
   Users,
 } from "lucide-react";
 import SearchIcon from "@mui/icons-material/Search";
-import { Sort } from "@mui/icons-material";
 import ManageUsersEmptySate from "./ManageUsersEmptyStateComponent/ManageUsersEmptySate";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import CustomExport from "../../../components/Export";
+import CustomFilter from "../../../components/CustomFilter";
+import { toast } from "sonner";
 
 // StatusPill component for Active/Inactive badges
 const StatusPill = ({ status }: { status: string }) => {
@@ -181,6 +182,18 @@ function ManageUsersSection() {
     setIsEmpty(true);
   };
 
+  const filterOptions = [
+    { label: "Status", value: "status" },
+    { label: "Phone Number", value: "phone" },
+    { label: "Date", value: "date" },
+    { label: "Role", value: "role" },
+  ];
+
+  const handleFilterSelect = (value: string) => {
+    toast.success(`Filtered by: ${value}`);
+    // Add your filter logic here
+  };
+
   return (
     <>
       {!isEmpty ? (
@@ -188,8 +201,8 @@ function ManageUsersSection() {
           <ManageUsersEmptySate
             stats={{ allUsers: 0, activeUsers: 0, inactiveUsers: 0 }}
             onCreateUser={handleFilled}
-            onExport={() => alert("No Users to Export ")}
-            onFilter={() => alert("No Users to Filter ")}
+            onExport={() => toast.warning("No User to Export ")}
+            onFilter={() => toast.warning("No User to Filter ")}
             title="Manage Users"
             description="View and manage all users in the system."
             overviewTitle="User Overview"
@@ -210,9 +223,11 @@ function ManageUsersSection() {
                 View and manage all users in the system.
               </p>
             </div>
-            <button className="bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg text-sm font-medium">
-              Create New User +
-            </button>
+            <Link to="/create-user">
+              <button className="bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg text-sm font-medium">
+                Create New User +
+              </button>
+            </Link>
           </div>
 
           {/* User Overview Cards */}
@@ -293,101 +308,12 @@ function ManageUsersSection() {
               />
 
               {/* Filter Button */}
-              <Button
-                variant="outlined"
-                endIcon={<Sort />}
-                sx={{
-                  textTransform: "none",
-                  borderColor: "#AD3291",
-                  color: "#AD3291",
-                  borderRadius: "8px",
-                  padding: "6px 24px",
-                }}
-                onClick={() => {
-                  const menu = document.getElementById("filter-menu");
-                  if (menu) {
-                    menu.style.display =
-                      menu.style.display === "none" ? "block" : "none";
-                  }
-                }}
-              >
-                Filter
-                <div
-                  id="filter-menu"
-                  style={{
-                    display: "none",
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    backgroundColor: "white",
-                    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                    borderRadius: "4px",
-                    zIndex: 1000,
-                    minWidth: "200px",
-                  }}
-                >
-                  <div className="py-1">
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      Status
-                    </button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      Phone Number
-                    </button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      Date
-                    </button>
-                  </div>
-                </div>
-              </Button>
+              <CustomFilter
+                filterOptions={filterOptions}
+                onFilterSelect={handleFilterSelect}
+              />
               {/* Export Button */}
-              <Button
-                variant="contained"
-                endIcon={<DownloadCloud />}
-                sx={{
-                  textTransform: "none",
-                  backgroundColor: "#AD3291",
-                  "&:hover": { backgroundColor: "#92287A" },
-                  borderRadius: "8px",
-                  padding: "6px 24px",
-                }}
-                onClick={() => {
-                  const menu = document.getElementById("export-menu");
-                  if (menu) {
-                    menu.style.display =
-                      menu.style.display === "none" ? "block" : "none";
-                  }
-                }}
-              >
-                Export
-                <div
-                  id="export-menu"
-                  style={{
-                    display: "none",
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    backgroundColor: "white",
-                    boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                    borderRadius: "4px",
-                    zIndex: 1000,
-                  }}
-                >
-                  <div className="py-1">
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      CSV
-                    </button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      PDF
-                    </button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      JPEG
-                    </button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      PNG
-                    </button>
-                  </div>
-                </div>
-              </Button>
+              <CustomExport />
             </Box>
             <table className="w-full border-collapse min-w-[800px]">
               <thead>
@@ -433,12 +359,14 @@ function ManageUsersSection() {
                     </td>
 
                     <td className="p-3">
-                      <Link to="/manage-users/user-profile">
+                      <Link
+                        to={`/user-profile/${item.col1.toLowerCase().replace(/\s+/g, "-")}`}
+                      >
                         <ChevronRight
                           size={16}
                           className="text-[#AD3291] bg-[#ef9fef] rounded-sm "
                         />
-                      </Link>{" "}
+                      </Link>
                     </td>
                   </tr>
                 ))}

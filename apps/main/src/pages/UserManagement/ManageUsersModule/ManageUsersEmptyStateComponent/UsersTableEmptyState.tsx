@@ -3,6 +3,7 @@ import { Box, Button, InputAdornment, TextField } from "@mui/material";
 import { DownloadCloud } from "lucide-react";
 import SearchIcon from "@mui/icons-material/Search";
 import { Sort } from "@mui/icons-material";
+import { empty } from "../../../../assets/assets";
 
 type UsersTableProps = {
   onCreateUser: () => void;
@@ -111,8 +112,12 @@ const UsersTableEmptyState: React.FC<UsersTableProps> = ({
 
       {/* Empty State */}
       <div className="flex flex-col items-center justify-center py-10 text-center text-gray-500">
-        <div className="w-20 h-20 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-full mb-4">
-          🔍
+        <div className="w-20 h-20 flex items-center justify-center  mb-4">
+          <img
+            src={empty}
+            alt="empty"
+            className="w-full h-full object-contain"
+          />
         </div>
         <p className="font-medium">No User</p>
         <p className="text-sm mb-4">

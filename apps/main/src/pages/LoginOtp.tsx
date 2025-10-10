@@ -37,7 +37,7 @@ const LoginOtp = () => {
     validationSchema: toFormikValidationSchema(schema),
     onSubmit: async (values) => {
       const payload = {
-        user_id: userId,
+        user_uuid: userId,
         otp: values.otp,
         context: "login", // OPTIONAL: login|reset|password|other
       };
@@ -71,7 +71,7 @@ const LoginOtp = () => {
       return;
     }
     const payload = {
-      user_id: userId,
+      email: email,
       context: "login",
     };
 
@@ -84,13 +84,11 @@ const LoginOtp = () => {
     } catch (error) {
       console.log(error);
     }
-    // Implement resend OTP logic here
-    console.log("Resend OTP");
   };
 
   return (
     <div className="">
-      <div className="text-left mb-6">
+      <div className="text-left mb-4">
         <h1 className="text-2xl font-bold text-[var(--brand-color)] mb-2">
           Enter Verification Code
         </h1>
@@ -101,7 +99,7 @@ const LoginOtp = () => {
       </div>
 
       {loginMutation.isError && (
-        <Alert severity="error" className="mb-4">
+        <Alert severity="error" className="mb-6">
           {loginMutation.error?.message || "Invalid OTP. Please try again."}
         </Alert>
       )}

@@ -101,7 +101,9 @@ const handleError = async (error: any) => {
       window.showSessionExpiredDialog();
     }
 
-    return Promise.reject(new Error("Session expired"));
+    return Promise.reject(
+      new Error(error.response.data.message || "Session expired")
+    );
   }
 
   const messages: Record<number, string> = {

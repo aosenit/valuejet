@@ -16,13 +16,12 @@ import {
 import { useFormik } from "formik";
 import * as z from "zod";
 
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { arrowRight } from "../utils/icons";
 
 import { toFormikValidationSchema } from "zod-formik-adapter";
 import { usePostData } from "../hooks/useApis";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
 
 const AuthPages = [
   "/signin",
@@ -61,7 +60,7 @@ const SignIn = () => {
             from && AuthPages.includes(from) ? from : "/dashboard";
           toast.success("OTP sent to your email");
           navigate(
-            `/verify-signin-otp?userId=${response?.data?.user_id}&email=${values.email}&location=${targetPage}`
+            `/verify-signin-otp?userId=${response?.data?.user_uuid}&email=${values.email}&location=${targetPage}`
           );
         }
       } catch (error) {
@@ -85,7 +84,7 @@ const SignIn = () => {
         </p>
       </div>
       {loginMutation.isError && (
-        <Alert severity="error" className="mt-1">
+        <Alert severity="error" className="mt-1 mb-4">
           {loginMutation.error.message || "Invalid credentials"}
         </Alert>
       )}

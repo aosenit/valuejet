@@ -18,7 +18,18 @@ import ResetOtp from "./pages/ResetOtp";
 
 import MainLayout from "./components/layouts/MainLayout";
 import ManageUsersSection from "./pages/UserManagement/ManageUsersModule/ManageUsersSection";
+import UserRoleDashboard from "./pages/UserManagement/UserRoleModule/UserRoleDashboard";
+import CreateUser from "./pages/UserManagement/CreateUser";
+import CreateRole from "./pages/UserManagement/CreateRole";
+import ViewRole from "./pages/UserManagement/ViewRole";
 import UserProfile from "./pages/UserManagement/UserProfile";
+import CustomerManagementDashboard from "./pages/CustomerManagement/CustomerManagementDashboard";
+import IncidenceManagementDashboard from "./pages/IncidenceManagement/IncidenceManagementDashboard";
+import EscalationManagementDashboard from "./pages/EscalationManagement/EscalationManagementDashboard";
+import DepartmentManagementDashboard from "./pages/DepartmentManagement/DepartmentManagementDashboard";
+import AuditTrailDashboard from "./pages/AuditTrail/AuditTrailDashboard";
+import KnowledgeBaseDashboard from "./pages/KnowledgeBase/KnowledgeBaseDashboard";
+import ApprovalWorkflowDashboard from "./pages/ApprovalWorkflow/ApprovalWorkflowDashboard";
 
 function App() {
   return (
@@ -35,6 +46,38 @@ function App() {
           />
           <Route
             path="/manage-users/user-profile"
+            element={
+              <MainLayout>
+                <UserProfile />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/create-user"
+            element={
+              <MainLayout>
+                <CreateUser />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/create-role"
+            element={
+              <MainLayout>
+                <CreateRole />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/view-role/:roleId"
+            element={
+              <MainLayout>
+                <ViewRole />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/user-profile/:userId"
             element={
               <MainLayout>
                 <UserProfile />
@@ -62,7 +105,7 @@ function App() {
             path="/dashboard"
             element={
               <MainLayout>
-                <div>Dashboard</div>
+                <IncidenceManagementDashboard />
               </MainLayout>
             }
           />
@@ -70,7 +113,7 @@ function App() {
             path="/incidence-management"
             element={
               <MainLayout>
-                <div>Incidence Management</div>
+                <IncidenceManagementDashboard />
               </MainLayout>
             }
           />
@@ -78,7 +121,7 @@ function App() {
             path="/customer-management"
             element={
               <MainLayout>
-                <div>Customer Management</div>
+                <CustomerManagementDashboard />
               </MainLayout>
             }
           />
@@ -86,7 +129,7 @@ function App() {
             path="/escalation-management"
             element={
               <MainLayout>
-                <div>Escalation Management</div>
+                <EscalationManagementDashboard />
               </MainLayout>
             }
           />
@@ -94,7 +137,7 @@ function App() {
             path="/department"
             element={
               <MainLayout>
-                <div>Department</div>
+                <DepartmentManagementDashboard />
               </MainLayout>
             }
           />
@@ -102,7 +145,7 @@ function App() {
             path="/knowledge-base"
             element={
               <MainLayout>
-                <div>Knowledge Base</div>
+                <KnowledgeBaseDashboard />
               </MainLayout>
             }
           />
@@ -110,7 +153,7 @@ function App() {
             path="/approval-workflow"
             element={
               <MainLayout>
-                <div>Approval Workflow</div>
+                <ApprovalWorkflowDashboard />
               </MainLayout>
             }
           />
@@ -118,7 +161,7 @@ function App() {
             path="/audit-trail"
             element={
               <MainLayout>
-                <div>Audit Trail</div>
+                <AuditTrailDashboard />
               </MainLayout>
             }
           />
@@ -134,7 +177,7 @@ function App() {
             path="/manage-roles"
             element={
               <MainLayout>
-                <div>Manage Roles</div>
+                <UserRoleDashboard />
               </MainLayout>
             }
           />
