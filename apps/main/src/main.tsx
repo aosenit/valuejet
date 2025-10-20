@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
+import "react-phone-input-2/lib/style.css";
 
 const theme = createTheme({
   palette: {

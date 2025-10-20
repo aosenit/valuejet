@@ -37,7 +37,7 @@ const UserActionMenu: React.FC<UserActionMenuProps> = ({
   const actionOptions = [
     {
       id: "save-changes",
-      label: "Save New Changes",
+      label: "Edit User Details",
       icon: Save,
       onClick: () => {
         onSaveChanges?.();

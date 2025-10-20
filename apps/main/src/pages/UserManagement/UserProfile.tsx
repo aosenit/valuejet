@@ -19,11 +19,14 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { NavigateNext, Search, FilterList } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { DecisionCard, ConfirmationCard } from "../../components/DialogCards";
 import UserActionMenu from "../../components/UserActionMenu";
 import { toast } from "sonner";
 import Pagination from "../../components/Pagination";
+import { useFetchData, useDeleteData, usePatchData } from "../../hooks/useApis";
+import UserProfileSkeletonLoader from "../../components/UserProfileSkeletonLoader";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -47,83 +50,36 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-// Mock user data
-const mockUserData = {
-  id: "timipreye-oweikeme",
-  firstName: "Timipreye",
-  lastName: "Oweikeme",
-  email: "timiowei@gmail.com",
-  phone: "+234 905 544 4444",
-  department: "Administrator",
-  role: "System Admin",
-  status: "Active",
-  dateCreated: "July 2, 2025",
-  timeCreated: "11:02 AM",
-  permissions: [
-    "Incident Management",
-    "Customer Profile Management",
-    "Escalation Management",
-    "Department",
-    "Audit Trail",
-    "User Management",
-    "Settings",
-    "Notification",
-  ],
-};
-
-// Mock activity data
-const mockActivities = [
-  {
-    id: 1,
-    date: "Jan 25 2025, 11:06 AM",
-    activityType: "Profile created",
-    description: "Fatima Yusuf created via KIU - Lagos to Abuja",
-  },
-  {
-    id: 2,
-    date: "Jan 25 2025, 11:06 AM",
-    activityType: "Document upload",
-    description: "Uploaded NIN.pdf for Chuka D.",
-  },
-  {
-    id: 3,
-    date: "Jan 25 2025, 11:06 AM",
-    activityType: "Verification",
-    description: "Phone verified for Temi T. (+2348012345671)",
-  },
-  {
-    id: 4,
-    date: "Jan 25 2025, 11:06 AM",
-    activityType: "Merge complete",
-    description: "Email for bukola@xmail.com failed",
-  },
-  {
-    id: 5,
-    date: "Jan 25 2025, 11:06 AM",
-    activityType: "Flight activity",
-    description: "Uche M. linked to Charles M. (Spouse)",
-  },
-  {
-    id: 6,
-    date: "Jan 25 2025, 11:06 AM",
-    activityType: "Segment update",
-    description: "Email for fabian@gmail.com success",
-  },
-];
-
 export default function UserProfile() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { userId } = useParams<{ userId: string }>();
+
   const [tabValue, setTabValue] = useState(0);
   const [decisionOpen, setDecisionOpen] = useState(false);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [actionType, setActionType] = useState<string>("");
-  const [userStatus, setUserStatus] = useState(
-    mockUserData.status === "Active"
-  );
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages] = useState(10);
   const [totalItems] = useState(100);
   const [itemsPerPage] = useState(10);
+
+  // Fetch user data from API
+  const {
+    data: userResponse,
+    isLoading,
+    error,
+  } = useFetchData(userId ? `users/${userId}` : null);
+
+  // API mutations
+  const activateUserMutation = usePatchData(`users/${userId}/activate`);
+  const deactivateUserMutation = usePatchData(`users/${userId}/deactivate`);
+  const deleteUserMutation = useDeleteData(`users`);
+
+  const userData = userResponse?.data;
+  const [userStatus, setUserStatus] = useState(
+    userData?.status?.toLowerCase() === "active"
+  );
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -132,8 +88,8 @@ export default function UserProfile() {
   };
 
   const handleSaveChanges = () => {
-    setDecisionOpen(true);
-    setActionType("save-changes");
+    // Navigate to edit user page with user ID
+    navigate(`/edit-user/${userId}`);
   };
 
   const handleDeactivateUser = () => {
@@ -151,36 +107,48 @@ export default function UserProfile() {
     setActionType("delete");
   };
 
-  const handleDecisionConfirm = () => {
-    setDecisionOpen(false);
-
-    switch (actionType) {
-      case "save-changes":
-        setTimeout(() => {
-          setConfirmationOpen(true);
-          toast.success("User updated successfully!");
-        }, 500);
-        break;
-      case "deactivate":
-        setTimeout(() => {
+  const handleDecisionConfirm = async () => {
+    try {
+      switch (actionType) {
+        case "deactivate":
+          await deactivateUserMutation.mutateAsync({});
+          await queryClient.invalidateQueries({
+            queryKey: [`users/${userId}`],
+          });
+          await queryClient.invalidateQueries({ queryKey: ["users"] });
           setUserStatus(false);
+          setDecisionOpen(false);
           setConfirmationOpen(true);
           toast.success("User deactivated successfully!");
-        }, 500);
-        break;
-      case "reactivate":
-        setTimeout(() => {
+          break;
+
+        case "reactivate":
+          await activateUserMutation.mutateAsync({});
+          await queryClient.invalidateQueries({
+            queryKey: [`users/${userId}`],
+          });
+          await queryClient.invalidateQueries({ queryKey: ["users"] });
           setUserStatus(true);
+          setDecisionOpen(false);
           setConfirmationOpen(true);
           toast.success("User reactivated successfully!");
-        }, 500);
-        break;
-      case "delete":
-        setTimeout(() => {
-          navigate("/manage-users");
+          break;
+
+        case "delete":
+          await deleteUserMutation.mutateAsync(userId);
+          await queryClient.invalidateQueries({ queryKey: ["users"] });
+          setDecisionOpen(false);
           toast.success("User deleted successfully!");
-        }, 500);
-        break;
+          navigate("/manage-users");
+          break;
+      }
+    } catch (error) {
+      console.error("Error performing action:", error);
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to perform action. Please try again.";
+      toast.error(errorMessage);
+      setDecisionOpen(false);
     }
   };
 
@@ -192,34 +160,31 @@ export default function UserProfile() {
   };
 
   const handleEditContact = () => {
-    navigate(`/edit-user/${mockUserData.id}`);
+    navigate(`/edit-user/${userId}`);
   };
 
   const getDecisionDialogProps = () => {
+    const getLoadingState = () => {
+      switch (actionType) {
+        case "deactivate":
+          return deactivateUserMutation.isPending;
+        case "reactivate":
+          return activateUserMutation.isPending;
+        case "delete":
+          return deleteUserMutation.isPending;
+        default:
+          return false;
+      }
+    };
+
     switch (actionType) {
-      case "save-changes":
-        return {
-          title: "Save New Changes ?",
-          description:
-            "Are you sure, you want to Save new changes ? Kindly note that this new changes would override previous data.",
-          cancelButton: {
-            text: "Cancel",
-            color: "#AD3291",
-            action: () => setDecisionOpen(false),
-          },
-          confirmButton: {
-            text: "Save Changes",
-            color: "#AD3291",
-            action: handleDecisionConfirm,
-          },
-        };
       case "deactivate":
         return {
-          title: "Deactivate Officer Profile ?",
+          title: "Deactivate User Profile ?",
           description:
-            "Are you sure, you want to deactivate this User profile >",
+            "Are you sure, you want to deactivate this User profile?",
           warningText:
-            "Kindly note that this action, implies user access to the system would be temporarily revoked hence, they won't be able to see nor manage customers.",
+            "Kindly note that this action implies user access to the system would be temporarily revoked hence, they won't be able to see nor manage customers.",
           cancelButton: {
             text: "Cancel",
             color: "#AD3291",
@@ -228,15 +193,18 @@ export default function UserProfile() {
           confirmButton: {
             text: "Deactivate Profile",
             color: "#AD3291",
-            action: handleDecisionConfirm,
+            action: () => {
+              void handleDecisionConfirm();
+            },
           },
+          loading: getLoadingState(),
         };
       case "reactivate":
         return {
           title: "Reactivate User Profile ?",
-          description: "Are you sure, you want to reactivate this User ?",
+          description: "Are you sure, you want to reactivate this User?",
           warningText:
-            "Kindly note that this action, implies user would now be able to use access their system access and see/mange customers with ease.",
+            "Kindly note that this action implies user would now be able to access the system and see/manage customers with ease.",
           cancelButton: {
             text: "Cancel",
             color: "#AD3291",
@@ -245,15 +213,18 @@ export default function UserProfile() {
           confirmButton: {
             text: "Reactivate Profile",
             color: "#AD3291",
-            action: handleDecisionConfirm,
+            action: () => {
+              void handleDecisionConfirm();
+            },
           },
+          loading: getLoadingState(),
         };
       case "delete":
         return {
           title: "Delete Profile ?",
           description: "Are you sure, you want to delete this user profile?",
           warningText:
-            "Kindly note that this action, implies user access to the system would be permanently revoked hence, they won't be able to see nor manage customers.",
+            "Kindly note that this action implies user access to the system would be permanently revoked hence, they won't be able to see nor manage customers.",
           cancelButton: {
             text: "Cancel",
             color: "#AD3291",
@@ -262,8 +233,11 @@ export default function UserProfile() {
           confirmButton: {
             text: "Delete Profile",
             color: "#EF4444",
-            action: handleDecisionConfirm,
+            action: () => {
+              void handleDecisionConfirm();
+            },
           },
+          loading: getLoadingState(),
         };
       default:
         return {
@@ -277,8 +251,11 @@ export default function UserProfile() {
           confirmButton: {
             text: "Confirm",
             color: "#AD3291",
-            action: handleDecisionConfirm,
+            action: () => {
+              void handleDecisionConfirm();
+            },
           },
+          loading: getLoadingState(),
         };
     }
   };
@@ -328,6 +305,57 @@ export default function UserProfile() {
     }
   };
 
+  // Handle loading state
+  if (isLoading) {
+    return <UserProfileSkeletonLoader />;
+  }
+
+  // Handle error state
+  if (error || !userData) {
+    return (
+      <Box sx={{ backgroundColor: "#F9F6F8", minHeight: "100vh", pb: 10 }}>
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-600 text-lg font-semibold mb-2">
+              Error loading user profile
+            </p>
+            <p className="text-gray-600">
+              {error instanceof Error ? error.message : "User not found"}
+            </p>
+            <Button
+              variant="contained"
+              onClick={() => navigate("/manage-users")}
+              sx={{ mt: 3, backgroundColor: "#AD3291" }}
+            >
+              Back to Users
+            </Button>
+          </div>
+        </div>
+      </Box>
+    );
+  }
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    if (!dateString) return { date: "N/A", time: "N/A" };
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
+      time: date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+  };
+
+  const { date: dateCreated, time: timeCreated } = formatDate(
+    userData.created_at
+  );
+
   return (
     <Box sx={{ backgroundColor: "#F9F6F8", minHeight: "100vh", pb: 10 }}>
       {/* Breadcrumbs */}
@@ -365,7 +393,7 @@ export default function UserProfile() {
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Typography variant="h4" sx={{ fontWeight: 600, color: "#101828" }}>
-              {mockUserData.firstName} {mockUserData.lastName}
+              {userData.firstname} {userData.lastname}
             </Typography>
             <Chip
               label={userStatus ? "Active" : "Inactive"}
@@ -387,7 +415,7 @@ export default function UserProfile() {
           />
         </Box>
         <Typography variant="body2" sx={{ color: "#667085", mt: 1 }}>
-          Role: {mockUserData.role}
+          Role: {userData.assigned_role || "N/A"}
         </Typography>
       </Box>
 
@@ -456,7 +484,7 @@ export default function UserProfile() {
                   First Name
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {mockUserData.firstName}
+                  {userData.firstname || "N/A"}
                 </Typography>
               </Box>
               <Box>
@@ -464,7 +492,7 @@ export default function UserProfile() {
                   Last Name
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {mockUserData.lastName}
+                  {userData.lastname || "N/A"}
                 </Typography>
               </Box>
               <Box>
@@ -472,7 +500,7 @@ export default function UserProfile() {
                   Department
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {mockUserData.department}
+                  {userData.department || "N/A"}
                 </Typography>
               </Box>
               <Box>
@@ -480,7 +508,7 @@ export default function UserProfile() {
                   Date Created
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {mockUserData.dateCreated}
+                  {dateCreated}
                 </Typography>
               </Box>
               <Box>
@@ -488,7 +516,7 @@ export default function UserProfile() {
                   Time Created
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {mockUserData.timeCreated}
+                  {timeCreated}
                 </Typography>
               </Box>
               <Box>
@@ -496,7 +524,7 @@ export default function UserProfile() {
                   Assigned Role
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {mockUserData.role}
+                  {userData.assigned_role || "N/A"}
                 </Typography>
               </Box>
             </Box>
@@ -555,7 +583,7 @@ export default function UserProfile() {
                   Email Address
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {mockUserData.email}
+                  {userData.email || "N/A"}
                 </Typography>
               </Box>
               <Box>
@@ -563,7 +591,7 @@ export default function UserProfile() {
                   Phone Number
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {mockUserData.phone}
+                  {userData.phone_number || "N/A"}
                 </Typography>
               </Box>
               <Box>
@@ -611,7 +639,7 @@ export default function UserProfile() {
             </Typography>
             <Box sx={{ mb: 0, p: 2 }}>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {mockUserData.role}
+                {userData.assigned_role || "N/A"}
               </Typography>
             </Box>
             <Box sx={{ p: 2 }}>
@@ -622,18 +650,24 @@ export default function UserProfile() {
                   gap: 1,
                 }}
               >
-                {mockUserData.permissions.map((permission) => (
-                  <Chip
-                    key={permission}
-                    label={permission}
-                    size="small"
-                    sx={{
-                      backgroundColor: "#F3F4F6",
-                      color: "#374151",
-                      fontWeight: 500,
-                    }}
-                  />
-                ))}
+                {userData.permissions && userData.permissions.length > 0 ? (
+                  userData.permissions.map((permission: string) => (
+                    <Chip
+                      key={permission}
+                      label={permission}
+                      size="small"
+                      sx={{
+                        backgroundColor: "#F3F4F6",
+                        color: "#374151",
+                        fontWeight: 500,
+                      }}
+                    />
+                  ))
+                ) : (
+                  <Typography variant="body2" sx={{ color: "#667085" }}>
+                    No permissions assigned
+                  </Typography>
+                )}
               </Box>
             </Box>
           </Box>
@@ -677,12 +711,14 @@ export default function UserProfile() {
                   borderRadius: "8px",
                 },
               }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search fontSize="small" sx={{ color: "#667085" }} />
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search fontSize="small" sx={{ color: "#667085" }} />
+                    </InputAdornment>
+                  ),
+                },
               }}
             />
             <Button
@@ -720,19 +756,36 @@ export default function UserProfile() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {mockActivities.map((activity) => (
-                  <TableRow key={activity.id}>
-                    <TableCell sx={{ color: "#6B7280" }}>
-                      {activity.date}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 500 }}>
-                      {activity.activityType}
-                    </TableCell>
-                    <TableCell sx={{ color: "#6B7280" }}>
-                      {activity.description}
+                {userData.activities && userData.activities.length > 0 ? (
+                  userData.activities.map(
+                    (activity: {
+                      id: string;
+                      date: string;
+                      activityType: string;
+                      description: string;
+                    }) => (
+                      <TableRow key={activity.id}>
+                        <TableCell sx={{ color: "#6B7280" }}>
+                          {activity.date}
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 500 }}>
+                          {activity.activityType}
+                        </TableCell>
+                        <TableCell sx={{ color: "#6B7280" }}>
+                          {activity.description}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} sx={{ textAlign: "center", py: 4 }}>
+                      <Typography variant="body2" sx={{ color: "#667085" }}>
+                        No activities found for this user
+                      </Typography>
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </TableContainer>

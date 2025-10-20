@@ -12,6 +12,7 @@ import { CheckEmailForm } from "./components/CheckEmail";
 import SetNewPassword from "./components/SetNewPassword";
 import { AppWithErrorHandling } from "./components/expired/AppWithErrorHandling";
 import LoginOtp from "./pages/LoginOtp";
+import ActivateAccount from "./components/ActivateAccount";
 
 import Forgot from "./pages/forgot";
 import ResetOtp from "./pages/ResetOtp";
@@ -61,6 +62,14 @@ function App() {
             }
           />
           <Route
+            path="/edit-user/:userId"
+            element={
+              <MainLayout>
+                <CreateUser />
+              </MainLayout>
+            }
+          />
+          <Route
             path="/create-role"
             element={
               <MainLayout>
@@ -94,6 +103,7 @@ function App() {
             <Route path="/reset-otp" element={<ResetOtp />} />
             <Route path="/check-email" element={<CheckEmailForm />} />
             <Route path="/set-new-password" element={<SetNewPassword />} />
+            <Route path="/activate-account" element={<ActivateAccount />} />
             <Route
               path="/password-reset-successful"
               element={<PasswordResetSuccessful />}

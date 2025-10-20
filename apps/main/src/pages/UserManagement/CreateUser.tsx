@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -6,12 +6,17 @@ import {
   Typography,
   Breadcrumbs,
   Link,
+  Skeleton,
 } from "@mui/material";
 import { NavigateNext } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { DecisionCard, ConfirmationCard } from "../../components/DialogCards";
 import UserRoleSelector from "../../components/UserRoleSelector";
 import { toast } from "sonner";
+import { usePostData, useFetchData, usePutData } from "../../hooks/useApis";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UserFormData {
   firstName: string;
@@ -21,17 +26,27 @@ interface UserFormData {
   selectedRoles: string[];
 }
 
-const availableRoles = [
-  { id: "all", name: "All" },
-  { id: "system-admin", name: "System Admin" },
-  { id: "it-support", name: "IT Support" },
-  { id: "hr-manager", name: "HR Manager" },
-  { id: "accountant", name: "Accountant" },
-  { id: "customer-service", name: "Customer Service Agent" },
-];
-
 export default function CreateUser() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { userId } = useParams<{ userId?: string }>();
+
+  // Determine if we're in edit mode
+  const isEditMode = !!userId;
+
+  // Fetch user data if in edit mode
+  const { data: userResponse, isLoading: userLoading } = useFetchData(
+    isEditMode ? `users/${userId}` : null
+  );
+
+  const createUserMutation = usePostData("users");
+  const updateUserMutation = usePutData(`users/${userId}`);
+  const { data: rolesResponse, isLoading: rolesLoading } =
+    useFetchData("users/roles");
+
+  const availableRoles = rolesResponse?.data || [];
+  const userData = userResponse?.data;
+
   const [formData, setFormData] = useState<UserFormData>({
     firstName: "",
     lastName: "",
@@ -42,6 +57,24 @@ export default function CreateUser() {
   const [errors, setErrors] = useState<Partial<UserFormData>>({});
   const [decisionOpen, setDecisionOpen] = useState(false);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
+
+  // Prefill form in edit mode
+  useEffect(() => {
+    if (isEditMode && userData && rolesResponse?.data) {
+      const roles = rolesResponse.data;
+      const matchingRole = roles.find(
+        (role: { name: string }) => role.name === userData.assigned_role
+      );
+
+      setFormData({
+        firstName: userData.firstname || "",
+        lastName: userData.lastname || "",
+        email: userData.email || "",
+        phoneNumber: userData.phone_number || "",
+        selectedRoles: matchingRole ? [matchingRole.id] : [],
+      });
+    }
+  }, [userData, isEditMode, rolesResponse]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<UserFormData> = {};
@@ -62,7 +95,7 @@ export default function CreateUser() {
 
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = "Phone number is required";
-    } else if (!/^[\d\s\-+()]+$/.test(formData.phoneNumber)) {
+    } else if (formData.phoneNumber.length < 10) {
       newErrors.phoneNumber = "Enter a valid phone number";
     }
 
@@ -93,22 +126,126 @@ export default function CreateUser() {
     }
   };
 
-  const handleDecisionConfirm = () => {
-    setDecisionOpen(false);
-    // Simulate API call
-    setTimeout(() => {
-      setConfirmationOpen(true);
-    }, 500);
+  const handleDecisionConfirm = async () => {
+    try {
+      const selectedRole = availableRoles.find(
+        (role: { id: string; name: string }) =>
+          role.id === formData.selectedRoles[0]
+      );
+
+      if (isEditMode) {
+        // Edit mode - PUT request
+        const payload = {
+          firstname: formData.firstName,
+          lastname: formData.lastName,
+          email: formData.email,
+          phone_number: formData.phoneNumber,
+          assigned_role: selectedRole?.name || formData.selectedRoles[0] || "",
+        };
+
+        const response = await updateUserMutation.mutateAsync(payload);
+
+        if (response) {
+          await queryClient.invalidateQueries({
+            queryKey: [`users/${userId}`],
+          });
+          await queryClient.invalidateQueries({ queryKey: ["users"] });
+
+          setDecisionOpen(false);
+          setConfirmationOpen(true);
+          toast.success(response.message || "User updated successfully!");
+        }
+      } else {
+        // Create mode - POST request
+        const callbackUrl = `${window.location.origin}/activate-account`;
+
+        const payload = {
+          firstname: formData.firstName,
+          lastname: formData.lastName,
+          email: formData.email,
+          phone_number: formData.phoneNumber,
+          assigned_role: selectedRole?.name || formData.selectedRoles[0] || "",
+          callback_url: callbackUrl,
+        };
+
+        const response = await createUserMutation.mutateAsync(payload);
+
+        if (response) {
+          await queryClient.invalidateQueries({ queryKey: ["users"] });
+
+          setDecisionOpen(false);
+          setConfirmationOpen(true);
+          toast.success(
+            response.message ||
+              "User created successfully! Activation email sent."
+          );
+        }
+      }
+    } catch (error) {
+      console.error(
+        `Error ${isEditMode ? "updating" : "creating"} user:`,
+        error
+      );
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ||
+        `Failed to ${isEditMode ? "update" : "create"} user. Please try again.`;
+      toast.error(errorMessage);
+      setDecisionOpen(false);
+    }
   };
 
   const handleConfirmationClose = () => {
     setConfirmationOpen(false);
-    navigate("/manage-users");
+    if (isEditMode) {
+      navigate(`/user-profile/${userId}`);
+    } else {
+      navigate("/manage-users");
+    }
   };
 
   const handleCancel = () => {
-    navigate("/manage-users");
+    if (isEditMode) {
+      navigate(`/user-profile/${userId}`);
+    } else {
+      navigate("/manage-users");
+    }
   };
+
+  // Loading state for edit mode
+  if (isEditMode && userLoading) {
+    return (
+      <Box sx={{ backgroundColor: "#F9F6F8", minHeight: "100vh", pb: 10 }}>
+        <Box sx={{ px: 4, py: 2 }}>
+          <Skeleton variant="text" width={200} height={24} />
+        </Box>
+        <Box
+          sx={{
+            mb: 4,
+            backgroundColor: "white",
+            px: 4,
+            py: 3,
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <Skeleton variant="text" width={250} height={32} sx={{ mb: 1 }} />
+          <Skeleton variant="text" width={300} height={20} />
+        </Box>
+        <Box sx={{ backgroundColor: "white", borderRadius: 2, p: 4, mx: 4 }}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Box key={`skeleton-field-${index}`} sx={{ mb: 3 }}>
+              <Skeleton variant="text" width={150} height={24} sx={{ mb: 1 }} />
+              <Skeleton
+                variant="rectangular"
+                height={40}
+                sx={{ borderRadius: 1 }}
+              />
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ backgroundColor: "#F9F6F8", minHeight: "100vh", pb: 10 }}>
@@ -125,7 +262,19 @@ export default function CreateUser() {
         >
           Manage Users
         </Link>
-        <Typography color="text.primary">Create New User</Typography>
+        {isEditMode && (
+          <Link
+            component="button"
+            variant="body2"
+            onClick={() => navigate(`/user-profile/${userId}`)}
+            sx={{ color: "#667085", textDecoration: "none" }}
+          >
+            User Profile
+          </Link>
+        )}
+        <Typography color="text.primary">
+          {isEditMode ? "Edit User" : "Create New User"}
+        </Typography>
       </Breadcrumbs>
 
       {/* Header */}
@@ -142,10 +291,14 @@ export default function CreateUser() {
           variant="h5"
           sx={{ fontWeight: 500, color: "#101828", mb: 1 }}
         >
-          Create New User
+          {isEditMode
+            ? `Edit User: ${userData?.firstname || ""} ${userData?.lastname || ""}`
+            : "Create New User"}
         </Typography>
         <Typography variant="body2" sx={{ color: "#667085" }}>
-          Fill in new user information to create one.
+          {isEditMode
+            ? "Update user information"
+            : "Fill in new user information to create one."}
         </Typography>
       </Box>
 
@@ -274,22 +427,57 @@ export default function CreateUser() {
                   Enter phone number.
                 </Typography>
               </div>
-              <TextField
-                className="w-full"
-                size="small"
-                placeholder="Enter user phone number"
-                value={formData.phoneNumber}
-                onChange={(e) =>
-                  handleInputChange("phoneNumber", e.target.value)
-                }
-                error={!!errors.phoneNumber}
-                helperText={errors.phoneNumber || "Enter a valid phone number"}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
+              <div
+                className={`w-full ${errors.phoneNumber ? "react-tel-input error" : ""}`}
+              >
+                <PhoneInput
+                  country={"ng"}
+                  value={formData.phoneNumber}
+                  onChange={(phone) => handleInputChange("phoneNumber", phone)}
+                  inputStyle={{
+                    width: "100%",
+                    height: "40px",
+                    fontSize: "14px",
                     borderRadius: "8px",
-                  },
-                }}
-              />
+                    paddingLeft: "48px",
+                  }}
+                  buttonStyle={{
+                    borderRadius: "8px 0 0 8px",
+                  }}
+                  containerStyle={{
+                    width: "100%",
+                  }}
+                  dropdownStyle={{
+                    borderRadius: "8px",
+                  }}
+                />
+                {errors.phoneNumber && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "#EF4444",
+                      mt: 0.5,
+                      display: "block",
+                      ml: 1.75,
+                    }}
+                  >
+                    {errors.phoneNumber}
+                  </Typography>
+                )}
+                {!errors.phoneNumber && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "#667085",
+                      mt: 0.5,
+                      display: "block",
+                      ml: 1.75,
+                    }}
+                  >
+                    Enter a valid phone number
+                  </Typography>
+                )}
+              </div>
             </Box>
 
             {/* Assign Role */}
@@ -309,22 +497,32 @@ export default function CreateUser() {
                 </Typography>
               </div>
               <div className="w-full">
-                <UserRoleSelector
-                  roles={availableRoles}
-                  selectedRoles={formData.selectedRoles}
-                  onRoleChange={(roles) =>
-                    handleInputChange("selectedRoles", roles)
-                  }
-                  placeholder="Select an Option (s)"
-                  helperText="You can only select one role"
-                />
-                {errors.selectedRoles && (
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "#EF4444", mt: 1, display: "block" }}
-                  >
-                    {errors.selectedRoles[0]}
-                  </Typography>
+                {rolesLoading ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="body2" sx={{ color: "#667085" }}>
+                      Loading roles...
+                    </Typography>
+                  </Box>
+                ) : (
+                  <>
+                    <UserRoleSelector
+                      roles={availableRoles}
+                      selectedRoles={formData.selectedRoles}
+                      onRoleChange={(roles) =>
+                        handleInputChange("selectedRoles", roles)
+                      }
+                      placeholder="Select an Option (s)"
+                      helperText="You can only select one role"
+                    />
+                    {errors.selectedRoles && (
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "#EF4444", mt: 1, display: "block" }}
+                      >
+                        {errors.selectedRoles[0]}
+                      </Typography>
+                    )}
+                  </>
                 )}
               </div>
             </Box>
@@ -354,6 +552,13 @@ export default function CreateUser() {
             <Button
               variant="contained"
               onClick={handleSave}
+              disabled={
+                (isEditMode
+                  ? updateUserMutation.isPending
+                  : createUserMutation.isPending) ||
+                rolesLoading ||
+                userLoading
+              }
               sx={{
                 textTransform: "none",
                 backgroundColor: "#AD3291",
@@ -362,9 +567,13 @@ export default function CreateUser() {
                 "&:hover": {
                   backgroundColor: "#92287A",
                 },
+                "&:disabled": {
+                  backgroundColor: "#D1D5DB",
+                  color: "#9CA3AF",
+                },
               }}
             >
-              Save
+              {isEditMode ? "Update" : "Save"}
             </Button>
           </Box>
         </Box>
@@ -372,19 +581,30 @@ export default function CreateUser() {
 
       {/* Decision Card */}
       <DecisionCard
+        loading={
+          isEditMode
+            ? updateUserMutation.isPending
+            : createUserMutation.isPending
+        }
         open={decisionOpen}
         onClose={() => setDecisionOpen(false)}
-        title="Create User ?"
-        description="Are you sure you want to create New User ?"
+        title={isEditMode ? "Update User ?" : "Create User ?"}
+        description={
+          isEditMode
+            ? "Are you sure you want to save these changes? This will update the user information."
+            : "Are you sure you want to create New User ?"
+        }
         cancelButton={{
           text: "Cancel",
           color: "#AD3291",
           action: () => setDecisionOpen(false),
         }}
         confirmButton={{
-          text: "Yes, Create",
+          text: isEditMode ? "Yes, Update" : "Yes, Create",
           color: "#AD3291",
-          action: handleDecisionConfirm,
+          action: () => {
+            void handleDecisionConfirm();
+          },
         }}
       />
 
@@ -392,8 +612,12 @@ export default function CreateUser() {
       <ConfirmationCard
         open={confirmationOpen}
         onClose={handleConfirmationClose}
-        title="User Created"
-        description="User has been successfully created"
+        title={isEditMode ? "User Updated" : "User Created"}
+        description={
+          isEditMode
+            ? "User has been successfully updated"
+            : "User has been successfully created"
+        }
         button={{
           text: "Close",
           color: "#AD3291",

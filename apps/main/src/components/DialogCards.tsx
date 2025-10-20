@@ -17,6 +17,7 @@ interface DecisionCardProps {
     color?: string;
     action: () => void;
   };
+  loading?: boolean;
 }
 
 export function DecisionCard({
@@ -27,6 +28,7 @@ export function DecisionCard({
   warningText,
   cancelButton,
   confirmButton,
+  loading,
 }: DecisionCardProps) {
   return (
     <Dialog
@@ -135,6 +137,7 @@ export function DecisionCard({
             {cancelButton.text}
           </Button>
           <Button
+            loading={loading}
             variant="contained"
             onClick={confirmButton.action}
             fullWidth
