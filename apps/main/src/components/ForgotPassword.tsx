@@ -40,7 +40,6 @@ export default function ForgotPassword() {
       }
     } catch (error) {
       console.error("Error sending reset link:", error);
-      toast.error("Failed to send reset link. Please try again.");
     }
   };
 
